@@ -218,6 +218,7 @@ set(QL_SOURCES
     indexes/equityindex.cpp
     indexes/ibor/bibor.cpp
     indexes/ibor/corra.cpp
+    indexes/ibor/custom.cpp
     indexes/ibor/eonia.cpp
     indexes/ibor/estr.cpp
     indexes/ibor/euribor.cpp
@@ -225,6 +226,7 @@ set(QL_SOURCES
     indexes/ibor/fedfunds.cpp
     indexes/ibor/kofr.cpp
     indexes/ibor/libor.cpp
+    indexes/ibor/saron.cpp
     indexes/ibor/shibor.cpp
     indexes/ibor/sofr.cpp
     indexes/ibor/sonia.cpp
@@ -793,6 +795,7 @@ set(QL_SOURCES
     processes/coxingersollrossprocess.cpp
     processes/squarerootprocess.cpp
     processes/stochasticprocessarray.cpp
+    quote.cpp
     quotes/eurodollarfuturesquote.cpp
     quotes/forwardswapquote.cpp
     quotes/forwardvaluequote.cpp
@@ -1253,6 +1256,7 @@ set(QL_HEADERS
     indexes/ibor/cdor.hpp
     indexes/ibor/chflibor.hpp
     indexes/ibor/corra.hpp
+    indexes/ibor/custom.hpp
     indexes/ibor/destr.hpp
     indexes/ibor/dkklibor.hpp
     indexes/ibor/eonia.hpp
@@ -1270,6 +1274,7 @@ set(QL_HEADERS
     indexes/ibor/nzocr.hpp
     indexes/ibor/pribor.hpp
     indexes/ibor/robor.hpp
+    indexes/ibor/saron.hpp
     indexes/ibor/seklibor.hpp
     indexes/ibor/shibor.hpp
     indexes/ibor/sofr.hpp
@@ -2238,6 +2243,7 @@ set(QL_HEADERS
     utilities/observablevalue.hpp
     utilities/steppingiterator.hpp
     utilities/tracing.hpp
+    utilities/variants.hpp
     utilities/vectors.hpp
     version.hpp
     volatilitymodel.hpp

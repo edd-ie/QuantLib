@@ -13,6 +13,7 @@ this_include_HEADERS = \
     cdor.hpp \
     chflibor.hpp \
     corra.hpp \
+    custom.hpp \
     destr.hpp \
     dkklibor.hpp \
     eonia.hpp \
@@ -30,6 +31,7 @@ this_include_HEADERS = \
     nzocr.hpp \
     pribor.hpp \
     robor.hpp \
+    saron.hpp \
     seklibor.hpp \
     shibor.hpp \
     sofr.hpp \
@@ -46,6 +48,7 @@ this_include_HEADERS = \
 cpp_files = \
     bibor.cpp \
     corra.cpp \
+    custom.cpp \
     eonia.cpp \
     estr.cpp \
     euribor.cpp \
@@ -53,6 +56,7 @@ cpp_files = \
     fedfunds.cpp \
     kofr.cpp \
     libor.cpp \
+    saron.cpp \
     shibor.cpp \
     sofr.cpp \
     sonia.cpp

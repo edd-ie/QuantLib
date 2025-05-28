@@ -36,6 +36,7 @@
 #include <ql/indexes/ibor/estr.hpp>
 #include <ql/indexes/ibor/euribor.hpp>
 #include <ql/indexes/ibor/fedfunds.hpp>
+#include <ql/indexes/ibor/sofr.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/cashflowvectors.hpp>
 #include <ql/cashflows/cashflows.hpp>
@@ -202,6 +203,7 @@ void testBootstrap(bool telescopicValueDates,
     Natural paymentLag = 2;
 
     std::vector<ext::shared_ptr<RateHelper> > estrHelpers;
+    auto spread = makeQuoteHandle(0.0);
 
     auto euribor3m = ext::make_shared<Euribor3M>();
     auto estr = ext::make_shared<Estr>();
@@ -235,7 +237,7 @@ void testBootstrap(bool telescopicValueDates,
                                                       Annual,
                                                       Calendar(),
                                                       0 * Days,
-                                                      0.0,
+                                                      spread,
                                                       Pillar::LastRelevantDate,
                                                       Date(),
                                                       averagingMethod);
@@ -417,6 +419,7 @@ BOOST_AUTO_TEST_CASE(testBootstrapWithCustomPricer) {
         ext::make_shared<ArithmeticAveragedOvernightIndexedCouponPricer>(0.02, 0.15, true);
 
     std::vector<ext::shared_ptr<RateHelper> > estrHelpers;
+    auto spread = makeQuoteHandle(0.0);
 
     auto euribor3m = ext::make_shared<Euribor3M>();
     auto estr = ext::make_shared<Estr>();
@@ -437,7 +440,7 @@ BOOST_AUTO_TEST_CASE(testBootstrapWithCustomPricer) {
                                                       Annual,
                                                       Calendar(),
                                                       0 * Days,
-                                                      0.0,
+                                                      spread,
                                                       Pillar::LastRelevantDate,
                                                       Date(),
                                                       averagingMethod,
@@ -490,6 +493,8 @@ void testBootstrapWithLookback(Natural lookbackDays,
     std::vector<ext::shared_ptr<RateHelper> > estrHelpers;
 
     auto estr = ext::make_shared<Estr>();
+    auto spread = makeQuoteHandle(0.0);
+
 
     for (auto& i : estrSwapData) {
         Real rate = 0.01 * i.rate;
@@ -506,7 +511,7 @@ void testBootstrapWithLookback(Natural lookbackDays,
                                                       Annual,
                                                       Calendar(),
                                                       0 * Days,
-                                                      0.0,
+                                                      spread,
                                                       Pillar::LastRelevantDate,
                                                       Date(),
                                                       RateAveraging::Compound,
@@ -670,6 +675,7 @@ BOOST_AUTO_TEST_CASE(testBootstrapRegression) {
 
     std::vector<ext::shared_ptr<RateHelper> > helpers;
     auto index = ext::make_shared<FedFunds>();
+    Spread spread = 0.0;
 
     helpers.push_back(
         ext::make_shared<DepositRateHelper>(data[0].rate,
@@ -689,7 +695,7 @@ BOOST_AUTO_TEST_CASE(testBootstrapRegression) {
                                   index,
                                   Handle<YieldTermStructure>(),
                                   false, 2,
-                                  Following, Annual, Calendar(), 0*Days, 0.0,
+                                  Following, Annual, Calendar(), 0*Days, spread,
                                   // this bootstrap fails with the default LastRelevantDate choice
                                   Pillar::MaturityDate));
     }
@@ -744,6 +750,49 @@ BOOST_AUTO_TEST_CASE(testDeprecatedHelper) {
         BOOST_ERROR("npv is not at par:\n"
                     << "    swap value: " << swap->NPV());
     }
+}
+
+BOOST_AUTO_TEST_CASE(testBootstrapWithDifferentCalendars) {
+    BOOST_TEST_MESSAGE("Testing OIS bootstrap when the swap maturity is not a fixing day for the index...");
+
+    Date today(10, April, 2025);
+    Settings::instance().evaluationDate() = today;
+
+    Datum data[] = {
+        { 2,  1, Years,  0.037755 },
+        { 2,  2, Years,  0.034115 },
+        { 2,  3, Years,  0.033417 }
+    };
+
+    std::vector<ext::shared_ptr<RateHelper> > helpers;
+    auto index = ext::make_shared<Sofr>();
+
+    auto calendar = UnitedStates(UnitedStates::FederalReserve);
+
+    helpers.reserve(std::size(data));
+for (auto & i : data) {
+        helpers.push_back(
+            ext::make_shared<OISRateHelper>(
+                                  i.settlementDays,
+                                  Period(i.n, i.unit),
+                                  makeQuoteHandle(i.rate),
+                                  index,
+                                  Handle<YieldTermStructure>(),
+                                  false, 0,
+                                  Following, Annual, calendar, 0*Days, 0.0,
+                                  Pillar::LastRelevantDate, Date(),
+                                  RateAveraging::Compound, ext::nullopt, ext::nullopt,
+                                  calendar, Null<Natural>(), 0, false,
+                                  ext::shared_ptr<FloatingRateCouponPricer>(),
+                                  DateGeneration::Backward, calendar));
+    }
+
+    BOOST_CHECK_EQUAL(helpers.back()->maturityDate(), Date(14, April, 2028)); // Good Friday; holiday for SOFR
+                                                                              // but not for Federal Reserve
+    BOOST_CHECK_EQUAL(helpers.back()->latestRelevantDate(), Date(17, April, 2028)); // end of last fixing
+
+    auto curve = PiecewiseYieldCurve<ForwardRate,BackwardFlat>(today, helpers, Actual365Fixed());
+    BOOST_CHECK_NO_THROW(curve.nodes());
 }
 
 BOOST_AUTO_TEST_CASE(testConstructorsAndNominals) {
